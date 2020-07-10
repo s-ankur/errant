@@ -1,7 +1,7 @@
-from alignment import Alignment
-from edit import Edit
-from hi.classifier import Classifier
-from hi.merger import Merger
+from .alignment import Alignment
+from .edit import Edit
+from .hi.classifier import Classifier
+from .hi.merger import Merger
 # Main ERRANT Annotator class
 import stanfordnlp
 

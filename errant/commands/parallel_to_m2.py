@@ -62,7 +62,6 @@ def main():
                             error_count[edit.type] += 1
                         else:
                             error_count[edit.type] = 1
-
                         out_m2.flush()
             # Write a newline when we have processed all corrections for each line
             out_m2.write("\n")

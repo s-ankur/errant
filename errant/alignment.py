@@ -1,7 +1,7 @@
 from itertools import groupby
 import Levenshtein
 import spacy.parts_of_speech as POS
-from edit import Edit
+from .edit import Edit
 import stanfordnlp
 
 
