@@ -2,6 +2,9 @@ import argparse
 from contextlib import ExitStack
 from errant.annotator import  Annotator
 
+import warnings
+
+warnings.simplefilter("ignore", UserWarning)
 
 def main():
     # Parse command line args
@@ -125,4 +128,5 @@ def noop_edit(id=0):
 
 
 if __name__ == "__main__":
+
     main()
