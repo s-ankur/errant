@@ -179,6 +179,12 @@ def get_one_sided_type(toks):
 # Input 1: Spacy orig tokens
 # Input 2: Spacy cor tokens
 # Output: An error type string based on orig AND cor
+def is_spelling(o_tok: str, c_tok: str):
+    for orig_pair in (('ये', 'ए'), ('यी', 'ई'), ('या', 'आ'), ('यीं', 'ईं'), ('आ', 'वा')):
+        for pair in (orig_pair, orig_pair[::-1]):
+            if o_tok.endswith(pair[0]) and c_tok.endswith(pair[1]):
+                return o_tok.rstrip(pair[0]) == c_tok.strip(pair[1])
+    return False
 
 
 def get_two_sided_type(o_toks, c_toks):
@@ -196,6 +202,9 @@ def get_two_sided_type(o_toks, c_toks):
     # 1:1 replacements (very common)
     if len(o_toks) == len(c_toks) == 1:
         # 1. SPECIAL CASES: None
+        if is_spelling(o_toks[0], c_toks[0]):
+            print(o_toks, c_toks)
+            return 'SPELL'
 
         # 2. SPELLING AND INFLECTION
         # Only check alphabetical strings on the original side
@@ -206,7 +215,6 @@ def get_two_sided_type(o_toks, c_toks):
             # Ratio > 0.5 means both side share at least half the same chars.
             # WARNING: THIS IS AN APPROXIMATION.
             if char_ratio > 0.5:
-                print(o_toks, c_toks)
                 return "SPELL"
             # If ratio is <= 0.5, the error is more complex e.g. tolk -> say
             else:
