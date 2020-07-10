@@ -37,6 +37,5 @@ class IndicSentenceTokenizer:
                 ans = text
                 text = ""
             ans = ans.strip()
-            if len(ans)>1:
-              yield ans
-            
+            if len(ans) > 1:
+                yield ans

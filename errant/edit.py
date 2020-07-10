@@ -11,15 +11,15 @@ class Edit:
         self.o_end = edit[1]
         print("orig")
         print(cor)
-        temp1=[]
-        temp2=[]
+        temp1 = []
+        temp2 = []
 
         for sent in orig.sentences:
-          for word in sent.words:
-            temp1.append(word)
+            for word in sent.words:
+                temp1.append(word)
         for sent in cor.sentences:
-          for word in sent.words:
-            temp2.append(word)
+            for word in sent.words:
+                temp2.append(word)
         self.o_toks = temp1[self.o_start:self.o_end]
         self.o_str = " ".join([words.text for words in self.o_toks]) if self.o_toks else ""
         # Cor offsets, spacy tokens and string
@@ -53,6 +53,7 @@ class Edit:
         return self
     # Input: An id for the annotator
     # Output: An edit string formatted for an M2 file
+
     def to_m2(self, id=0):
         span = " ".join(["A", str(self.o_start), str(self.o_end)])
         cor_toks_str = " ".join([tok.text for tok in self.c_toks])
@@ -60,7 +61,7 @@ class Edit:
 
     # Edit object string representation
     def __str__(self):
-        orig = "Orig: "+str([self.o_start, self.o_end, self.o_str])
-        cor = "Cor: "+str([self.c_start, self.c_end, self.c_str])
-        type = "Type: "+repr(self.type)
+        orig = "Orig: " + str([self.o_start, self.o_end, self.o_str])
+        cor = "Cor: " + str([self.c_start, self.c_end, self.c_str])
+        type = "Type: " + repr(self.type)
         return ", ".join([orig, cor, type])

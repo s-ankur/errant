@@ -2,6 +2,7 @@ import argparse
 from contextlib import ExitStack
 from annotator import Annotator
 
+
 def main():
     # Parse command line args
     print("df")
@@ -15,12 +16,12 @@ def main():
     # Process an arbitrary number of files line by line simultaneously. Python 3.3+
     # See https://tinyurl.com/y4cj4gth
     with ExitStack() as stack:
-        in_files = [stack.enter_context(open(i)) for i in [args.orig]+args.cor]
+        in_files = [stack.enter_context(open(i)) for i in [args.orig] + args.cor]
         # Process each line of all input files
         for line in zip(*in_files):
             # Get the original and all the corrected texts
-            temp1=[]
-            temp2=[]
+            temp1 = []
+            temp2 = []
             orig = line[0].strip()
             print(orig)
             cors = line[1:]
@@ -34,17 +35,17 @@ def main():
               for word in sent.words:
                 temp1.append(word)
             print("writing data in out.m2")
-            out_m2.write(" ".join(["S"]+[token.text for token in temp1])+"\n")
+            out_m2.write(" ".join(["S"] + [token.text for token in temp1]) + "\n")
             for sent in cors.sentences:
               for word in sent.words:
                 temp2.append(word)
-            
+
             # Loop through the corrected texts
             for cor_id, cor in enumerate(cors):
                 cor = cor.strip()
                 # If the texts are the same, write a noop edit
                 if orig.text.strip() == cor:
-                    out_m2.write(noop_edit(cor_id)+"\n")
+                    out_m2.write(noop_edit(cor_id) + "\n")
                 # Otherwise, do extra processing
                 else:
                     # Parse cor with spacy
@@ -54,11 +55,11 @@ def main():
                     # Loop through the edits
                     for edit in edits:
                         # Write the edit to the output m2 file
-                        out_m2.write(edit.to_m2(cor_id)+"\n")
+                        out_m2.write(edit.to_m2(cor_id) + "\n")
             # Write a newline when we have processed all corrections for each line
             out_m2.write("\n")
 
-            
+
 #    pr.disable()
 #    pr.print_stats(sort="time")
      out_m2.close()

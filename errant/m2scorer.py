@@ -15,8 +15,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # file: m2scorer.py
-# 
-# score a system's output against a gold reference 
+#
+# score a system's output against a gold reference
 #
 # Usage: m2scorer.py [OPTIONS] proposed_sentences source_gold
 # where
@@ -36,7 +36,6 @@ import Levenshtein
 from getopt import getopt
 from utils import paragraphs
 from utils import smart_open
-
 
 
 def load_annotation(gold_file):
@@ -63,7 +62,7 @@ def load_annotation(gold_file):
             if etype == 'noop':
                 start_offset = -1
                 end_offset = -1
-            corrections =  [c.strip() if c != '-NONE-' else '' for c in fields[2].split('||')]
+            corrections = [c.strip() if c != '-NONE-' else '' for c in fields[2].split('||')]
             # NOTE: start and end are *token* offsets
             original = ' '.join(' '.join(sentence).split()[start_offset:end_offset])
             annotator = int(fields[5])
@@ -96,10 +95,9 @@ def print_usage():
     print >> sys.stderr, "        --ignore_whitespace_casing  -  Ignore edits that only affect whitespace and caseing. Default no."
 
 
-
-max_unchanged_words=2
+max_unchanged_words = 2
 beta = 0.5
-ignore_whitespace_casing= False
+ignore_whitespace_casing = False
 verbose = False
 very_verbose = False
 opts, args = getopt(sys.argv[1:], "v", ["max_unchanged_words=", "beta=", "verbose", "ignore_whitespace_casing", "very_verbose"])
@@ -140,4 +138,3 @@ p, r, f1 = Levenshtein.batch_multi_pre_rec_f1(system_sentences, source_sentences
 print "Precision   : %.4f" % p
 print "Recall      : %.4f" % r
 print "F_%.1f       : %.4f" % (beta, f1)
-

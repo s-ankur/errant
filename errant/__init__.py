@@ -6,6 +6,8 @@ from errant.annotator import Annotator
 __version__ = '2.2.0'
 
 # Load an ERRANT Annotator object for a given language
+
+
 def load(lang, nlp=None):
     # Make sure the language is supported
     supported = {"hi"}
@@ -21,7 +23,8 @@ def load(lang, nlp=None):
     # Load language edit classifier
     classifier = import_module("errant.%s.classifier" % lang)
     # The English classifier needs spacy
-    if lang == "hi": classifier.nlp = nlp
+    if lang == "hi":
+        classifier.nlp = nlp
 
     # Return a configured ERRANT annotator
     return Annotator(lang, nlp, merger, classifier)
