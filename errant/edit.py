@@ -9,8 +9,6 @@ class Edit:
         # Orig offsets, spacy tokens and string
         self.o_start = edit[0]
         self.o_end = edit[1]
-        print("orig")
-        print(cor)
         temp1 = []
         temp2 = []
 
