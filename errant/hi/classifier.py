@@ -195,26 +195,12 @@ def get_two_sided_type(o_toks, c_toks):
 
     # 1:1 replacements (very common)
     if len(o_toks) == len(c_toks) == 1:
-        # 1. SPECIAL CASES
-        # Possessive noun suffixes; e.g. ' -> 's
-        if o_toks[0].upos == "POS" or c_toks[0].upos == "POS":
-            return "NOUN:POSS"
-        # Contraction. Rule must come after possessive.
-        # Special auxiliaries in contractions (1); e.g. ca -> can, wo -> will
-        # Rule was broken in V1. Turned off this fix for compatibility.
-        if (o_toks[0] in aux_conts and
-            c_toks[0] == aux_conts[o_toks[0]]) or \
-                (c_toks[0] in aux_conts and
-                 o_toks[0] == aux_conts[c_toks[0]]):
-            return "CONTR"
-        # Special auxiliaries in contractions (2); e.g. ca -> could, wo -> should
-        # Special: "was" and "were" are the only past tense SVA
-        if {o_toks[0].text, c_toks[0].text} == {"था", "थे", "थी"}:
-            return "VERB:SVA"
+        # 1. SPECIAL CASES: None
 
         # 2. SPELLING AND INFLECTION
         # Only check alphabetical strings on the original side
         # Spelling errors take precedence over POS errors; this rule is ordered
+        print(o_toks,c_toks)
         if o_toks[0].text not in spell:
             # Check a GB English dict for both orig and lower case.
             # E.g. "cat" is in the dict, but "Cat" is not.
