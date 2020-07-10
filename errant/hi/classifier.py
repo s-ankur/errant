@@ -218,7 +218,7 @@ def get_two_sided_type(o_toks, c_toks):
                 return "SPELL"
             # If ratio is <= 0.5, the error is more complex e.g. tolk -> say
             else:
-                print(o_toks, c_toks, "SPELL")
+                print(o_toks, c_toks, "OTHER")
                 return "OTHER"
 
         # 3. MORPHOLOGY
