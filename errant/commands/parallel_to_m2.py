@@ -1,10 +1,11 @@
 import argparse
-from contextlib import ExitStack
-from errant.annotator import  Annotator
-
 import warnings
+from contextlib import ExitStack
+
+from errant.annotator import Annotator
 
 warnings.simplefilter("ignore", UserWarning)
+
 
 def main():
     # Parse command line args
@@ -110,14 +111,15 @@ def parse_args():
     parser.add_argument(
         "-merge",
         help="Choose a merging strategy for automatic alignment.\n"
-        "rules: Use a rule-based merging strategy (default)\n"
-        "all-split: Merge nothing: MSSDI -> M, S, S, D, I\n"
-        "all-merge: Merge adjacent non-matches: MSSDI -> M, SSDI\n"
-        "all-equal: Merge adjacent same-type non-matches: MSSDI -> M, SS, D, I",
+             "rules: Use a rule-based merging strategy (default)\n"
+             "all-split: Merge nothing: MSSDI -> M, S, S, D, I\n"
+             "all-merge: Merge adjacent non-matches: MSSDI -> M, SSDI\n"
+             "all-equal: Merge adjacent same-type non-matches: MSSDI -> M, SS, D, I",
         choices=["rules", "all-split", "all-merge", "all-equal"],
         default="rules")
     args = parser.parse_args()
     return args
+
 
 # Input: A coder id
 # Output: A noop edit; i.e. text contains no edits
@@ -128,5 +130,4 @@ def noop_edit(id=0):
 
 
 if __name__ == "__main__":
-
     main()

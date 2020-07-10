@@ -1,13 +1,15 @@
 from itertools import groupby
+
 import Levenshtein
 import spacy.parts_of_speech as POS
+
 from .edit import Edit
-import stanfordnlp
 
 
 class Alignment:
     # Protected class resource
     _open_pos = {POS.ADJ, POS.ADV, POS.NOUN, POS.VERB}
+
     # Input 1: An original text string parsed by spacy
     # Input 2: A corrected text string parsed by spacy
     # Input 3: A flag for standard Levenshtein alignment
@@ -72,7 +74,7 @@ class Alignment:
                     else:
                         # Custom substitution
                         sub_cost = cost_matrix[i][j] + \
-                            self.get_sub_cost(self.temp1[i], self.temp2[j])
+                                   self.get_sub_cost(self.temp1[i], self.temp2[j])
                         # Transpositions require >=2 tokens
                         # Traverse the diagonal while there is not a Match.
                         k = 1

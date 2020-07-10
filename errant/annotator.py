@@ -1,9 +1,10 @@
+# Main ERRANT Annotator class
+import stanfordnlp
+
 from .alignment import Alignment
 from .edit import Edit
 from .hi.classifier import Classifier
 from .hi.merger import Merger
-# Main ERRANT Annotator class
-import stanfordnlp
 
 
 class Annotator:
@@ -23,6 +24,7 @@ class Annotator:
     def parse(self, text, tokenise=False):
         hindi_doc = self.nlp(text)
         return hindi_doc
+
     # Input 1: An original text string parsed by spacy
     # Input 2: A corrected text string parsed by spacy
     # Input 3: A flag for standard Levenshtein alignment

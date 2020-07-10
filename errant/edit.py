@@ -49,6 +49,7 @@ class Edit:
         self.o_str = " ".join([words.text for words in self.o_toks]) if self.o_toks else ""
         self.c_str = " ".join([words.text for words in self.c_toks]) if self.c_toks else ""
         return self
+
     # Input: An id for the annotator
     # Output: An edit string formatted for an M2 file
 

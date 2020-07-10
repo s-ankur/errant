@@ -1,4 +1,5 @@
 from pathlib import Path
+
 from setuptools import setup, find_packages
 
 # Get base working directory.
@@ -20,7 +21,7 @@ setup(
     url="https://github.com/chrisjbryant/errant",
     keywords=["automatic annotation", "grammatical errors", "natural language processing"],
     python_requires=">= 3.3",
-    install_requires=["spacy>=2.2.0", "nltk==3.4.5", "python-Levenshtein==0.12.0","stanfordnlp>=0.2.0"],
+    install_requires=["spacy>=2.2.0", "nltk==3.4.5", "python-Levenshtein==0.12.0", "stanfordnlp>=0.2.0"],
     packages=find_packages(),
     include_package_data=True,
     entry_points={

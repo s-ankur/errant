@@ -1,9 +1,12 @@
 from importlib import import_module
+
 import spacy
+
 from errant.annotator import Annotator
 
 # ERRANT version
 __version__ = '2.2.0'
+
 
 # Load an ERRANT Annotator object for a given language
 

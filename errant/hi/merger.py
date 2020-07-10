@@ -1,8 +1,10 @@
 from itertools import combinations, groupby
 from re import sub
 from string import punctuation
+
 import Levenshtein
 import spacy.symbols as POS
+
 from ..edit import Edit
 
 # Merger resources
@@ -57,47 +59,47 @@ class Merger:
             # Merge possessive suffixes: [friends -> friend 's]
             if o[-1].upos == "POS" or c[-1].upos == "POS":
                 return self.process_seq(seq[:end - 1], alignment) + \
-                    self.merge_edits(seq[end - 1:end + 1]) + \
-                    self.process_seq(seq[end + 1:], alignment)
+                       self.merge_edits(seq[end - 1:end + 1]) + \
+                       self.process_seq(seq[end + 1:], alignment)
             # Case changes
             if o[-1].text == c[-1].text:
                 # Merge first token I or D: [Cat -> The big cat]
                 if start == 0 and (len(o) == 1 and c[0].text[0].isupper()) or \
                         (len(c) == 1 and o[0].text[0].isupper()):
                     return self.merge_edits(seq[start:end + 1]) + \
-                        self.process_seq(seq[end + 1:], alignment)
+                           self.process_seq(seq[end + 1:], alignment)
                 # Merge with previous punctuation: [, we -> . We], [we -> . We]
                 if (len(o) > 1 and is_punct(o[-2])) or \
                         (len(c) > 1 and is_punct(c[-2])):
                     return self.process_seq(seq[:end - 1], alignment) + \
-                        self.merge_edits(seq[end - 1:end + 1]) + \
-                        self.process_seq(seq[end + 1:], alignment)
+                           self.merge_edits(seq[end - 1:end + 1]) + \
+                           self.process_seq(seq[end + 1:], alignment)
             # Merge whitespace/hyphens: [acat -> a cat], [sub - way -> subway]
             s_str = sub("['-]", "", "".join([tok.text for tok in o]))
             t_str = sub("['-]", "", "".join([tok.text for tok in c]))
             if s_str == t_str:
                 return self.process_seq(seq[:start], alignment) + \
-                    self.merge_edits(seq[start:end + 1]) + \
-                    self.process_seq(seq[end + 1:], alignment)
+                       self.merge_edits(seq[start:end + 1]) + \
+                       self.process_seq(seq[end + 1:], alignment)
             # Merge same POS or auxiliary/infinitive/phrasal verbs:
             # [to eat -> eating], [watch -> look at]
             pos_set = set([tok.upos for tok in o] + [tok.upos for tok in c])
             if len(o) != len(c) and (len(pos_set) == 1 or
                                      pos_set.issubset({POS.AUX, POS.PART, POS.VERB})):
                 return self.process_seq(seq[:start], alignment) + \
-                    self.merge_edits(seq[start:end + 1]) + \
-                    self.process_seq(seq[end + 1:], alignment)
+                       self.merge_edits(seq[start:end + 1]) + \
+                       self.process_seq(seq[end + 1:], alignment)
             # Split rules take effect when we get to smallest chunks
             if end - start < 2:
                 # Split adjacent substitutions
                 if len(o) == len(c) == 2:
                     return self.process_seq(seq[:start + 1], alignment) + \
-                        self.process_seq(seq[start + 1:], alignment)
+                           self.process_seq(seq[start + 1:], alignment)
                 # Split similar substitutions at sequence boundaries
                 if (ops[start] == "S" and self.char_cost(o[0], c[0]) > 0.75) or \
                         (ops[end] == "S" and self.char_cost(o[-1], c[-1]) > 0.75):
                     return self.process_seq(seq[:start + 1], alignment) + \
-                        self.process_seq(seq[start + 1:], alignment)
+                           self.process_seq(seq[start + 1:], alignment)
                 # Split final determiners
                 if end == len(seq) - 1 and ((ops[-1] in {"D", "S"} and
                                              o[-1].upos == POS.DET) or (ops[-1] in {"I", "S"} and

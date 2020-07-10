@@ -1,4 +1,5 @@
 import argparse
+
 import errant
 
 
@@ -69,6 +70,7 @@ def main():
         # Write a newline when there are no more edits
         out_m2.write("\n")
 
+
 # Parse command line args
 
 
@@ -108,14 +110,15 @@ def parse_args():
     parser.add_argument(
         "-merge",
         help="Choose a merging strategy for automatic alignment.\n"
-        "rules: Use a rule-based merging strategy (default)\n"
-        "all-split: Merge nothing: MSSDI -> M, S, S, D, I\n"
-        "all-merge: Merge adjacent non-matches: MSSDI -> M, SSDI\n"
-        "all-equal: Merge adjacent same-type non-matches: MSSDI -> M, SS, D, I",
+             "rules: Use a rule-based merging strategy (default)\n"
+             "all-split: Merge nothing: MSSDI -> M, S, S, D, I\n"
+             "all-merge: Merge adjacent non-matches: MSSDI -> M, SSDI\n"
+             "all-equal: Merge adjacent same-type non-matches: MSSDI -> M, SS, D, I",
         choices=["rules", "all-split", "all-merge", "all-equal"],
         default="rules")
     args = parser.parse_args()
     return args
+
 
 # Input: A list of edit lines from an m2 file
 # Output: An edit dictionary; key is coder id, value is a list of edits
@@ -139,6 +142,7 @@ def simplify_edits(edits):
         else:
             edit_dict[id] = [proc_edit]
     return edit_dict
+
 
 # Input 1: A tokenised original text string
 # Input 2: A list of edits; [o_start, o_end, cat, cor]
@@ -179,6 +183,7 @@ def get_cor_and_edits(orig, edits):
         new_edit = [o_start, o_end, c_start, c_end, cat, " ".join(cor_toks)]
         new_edits.append(new_edit)
     return " ".join(cor), new_edits
+
 
 # Input: A coder id
 # Output: A noop edit; i.e. text contains no edits

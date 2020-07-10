@@ -1,15 +1,18 @@
 from pathlib import Path
+
 import Levenshtein
-from nltk.stem import LancasterStemmer
-import spacy
 import spacy.symbols as POS
+
 from .hindi_stemmer import HindiStemmer
+
+
 # Load Hunspell word list
 
 
 def load_word_list(path):
     with open(path) as word_list:
         return set([word.strip() for word in word_list])
+
 
 # Load Universal Dependency POS Tags map file.
 # https://universaldependencies.org/tagset-conversion/en-penn-uposf.html
@@ -48,7 +51,7 @@ base_dir = Path(__file__).resolve().parent
 # Spacy
 nlp = None
 # Lancaster Stemmer
-#stemmer = LancasterStemmer()
+# stemmer = LancasterStemmer()
 stemmer = HindiStemmer()
 # GB English word list (inc -ise and -ize)
 spell = load_word_list(base_dir / "resources" / "big.txt")
@@ -73,6 +76,7 @@ dep_map = {
     "prep": "PREP",
     "prt": "PART",
     "punct": "PUNCT"}
+
 
 # Input: An Edit object
 # Output: The same Edit object with an updated error type
@@ -121,6 +125,7 @@ class Classifier:
                 edit.type = op + cat
         return edit
 
+
 # Input: Spacy tokens
 # Output: A list of pos and dep tag strings
 
@@ -135,6 +140,7 @@ def get_edit_info(toks):
             pos.append(tok.xpos)
         dep.append(tok.dependency_relation)
     return pos, dep
+
 
 # Input: Spacy tokens
 # Output: An error type string based on input tokens from orig or cor
@@ -169,6 +175,7 @@ def get_one_sided_type(toks):
     else:
         return "OTHER"
 
+
 # Input 1: Spacy orig tokens
 # Input 2: Spacy cor tokens
 # Output: An error type string based on orig AND cor
@@ -196,7 +203,7 @@ def get_two_sided_type(o_toks, c_toks):
         # Special auxiliaries in contractions (1); e.g. ca -> can, wo -> will
         # Rule was broken in V1. Turned off this fix for compatibility.
         if (o_toks[0] in aux_conts and
-                c_toks[0] == aux_conts[o_toks[0]]) or \
+            c_toks[0] == aux_conts[o_toks[0]]) or \
                 (c_toks[0] in aux_conts and
                  o_toks[0] == aux_conts[c_toks[0]]):
             return "CONTR"
@@ -260,7 +267,8 @@ def get_two_sided_type(o_toks, c_toks):
                             c_toks[0].xpos in {"VBG", "VBN"}:
                         return "VERB:FORM"
                     # Of what's left, TENSE errors normally involved VBD.
-                    if o_toks[0].upos == "VBD" or o_toks[0].pos == "VBD"or o_toks[0].xpos == "VBD" or c_toks[0].xpos == "VBD" or c_toks[0].upos == "VBD" or c_toks[0].pos == "VBD":
+                    if o_toks[0].upos == "VBD" or o_toks[0].pos == "VBD" or o_toks[0].xpos == "VBD" or c_toks[
+                        0].xpos == "VBD" or c_toks[0].upos == "VBD" or c_toks[0].pos == "VBD":
                         return "VERB:TENSE"
                     # Of what's left, SVA errors normally involve VBZ.
                     if o_toks[0].xpos == "VBZ" or c_toks[0].xpos == "VBZ":
@@ -348,7 +356,7 @@ def get_two_sided_type(o_toks, c_toks):
         return "NOUN:POSS"
     # Adjective forms with "most" and "more"; e.g. more free -> freer
     if (o_toks[0] in {"अधिकतम", "अधिक", "परम", "ज्यादा"} or
-            c_toks[0].text in {"अधिकतम", "अधिक", "परम", "ज्यादा"}) and \
+        c_toks[0].text in {"अधिकतम", "अधिक", "परम", "ज्यादा"}) and \
             o_toks[-1].lemma == c_toks[-1].lemma and \
             len(o_toks) <= 2 and len(c_toks) <= 2:
         return "ADJ:FORM"
@@ -356,6 +364,7 @@ def get_two_sided_type(o_toks, c_toks):
     # Tricky cases.
     else:
         return "OTHER"
+
 
 # Input 1: Spacy orig tokens
 # Input 2: Spacy cor tokens
@@ -369,6 +378,7 @@ def only_orth_change(o_toks, c_toks):
         return True
     return False
 
+
 # Input 1: Spacy orig tokens
 # Input 2: Spacy cor tokens
 # Output: Boolean; the tokens are exactly the same but in a different order
@@ -381,6 +391,7 @@ def exact_reordering(o_toks, c_toks):
     if o_set == c_set:
         return True
     return False
+
 
 # Input 1: An original text spacy token.
 # Input 2: A corrected text spacy token.

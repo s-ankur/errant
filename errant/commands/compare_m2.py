@@ -32,13 +32,14 @@ def main():
     # Print results
     print_results(best_dict, best_cats, args)
 
+
 # Parse command line args
 
 
 def parse_args():
     parser = argparse.ArgumentParser(
         description="Calculate F-scores for error detection and/or correction.\n"
-        "Flags let you evaluate at different levels of granularity.",
+                    "Flags let you evaluate at different levels of granularity.",
         formatter_class=argparse.RawTextHelpFormatter,
         usage="%(prog)s [options] -hyp HYP -ref REF")
     parser.add_argument(
@@ -93,13 +94,14 @@ def parse_args():
     parser.add_argument(
         "-cat",
         help="Show error category scores.\n"
-        "1: Only show operation tier scores; e.g. R.\n"
-        "2: Only show main tier scores; e.g. NOUN.\n"
-        "3: Show all category scores; e.g. R:NOUN.",
+             "1: Only show operation tier scores; e.g. R.\n"
+             "2: Only show main tier scores; e.g. NOUN.\n"
+             "3: Show all category scores; e.g. R:NOUN.",
         choices=[1, 2, 3],
         type=int)
     args = parser.parse_args()
     return args
+
 
 # Input: An m2 format sentence with edits.
 # Output: A list of lists. Each edit: [start, end, cat, cor, coder]
@@ -122,6 +124,7 @@ def simplify_edits(sent):
         out_edit = [start, end, cat, cor, coder]
         out_edits.append(out_edit)
     return out_edits
+
 
 # Input 1: A list of edits. Each edit: [start, end, cat, cor, coder]
 # Input 2: Command line args
@@ -204,6 +207,7 @@ def process_edits(edits, args):
                     coder_dict[coder][(start, end, cor)] = [cat]
     return coder_dict
 
+
 # Input 1: A hyp dict; key is coder_id, value is dict of processed hyp edits.
 # Input 2: A ref dict; key is coder_id, value is dict of processed ref edits.
 # Input 3: A dictionary of the best corpus level TP, FP and FN counts so far.
@@ -234,8 +238,8 @@ def evaluate_edits(hyp_dict, ref_dict, best, sent_id, args):
             # 3. Same F-score and TP, lower FP
             # 4. Same F-score, TP and FP, lower FN
             if (f > best_f) or \
-                (f == best_f and tp > best_tp) or \
-                (f == best_f and tp == best_tp and fp < best_fp) or \
+                    (f == best_f and tp > best_tp) or \
+                    (f == best_f and tp == best_tp and fp < best_fp) or \
                     (f == best_f and tp == best_tp and fp == best_fp and fn < best_fn):
                 best_tp, best_fp, best_fn = tp, fp, fn
                 best_f, best_hyp, best_ref = f, hyp_id, ref_id
@@ -267,6 +271,7 @@ def evaluate_edits(hyp_dict, ref_dict, best, sent_id, args):
     best_dict = {"tp": best_tp, "fp": best_fp, "fn": best_fn}
     return best_dict, best_cat
 
+
 # Input 1: A dictionary of hypothesis edits for a single system.
 # Input 2: A dictionary of reference edits for a single annotator.
 # Output 1-3: The TP, FP and FN for the hyp vs the given ref annotator.
@@ -274,9 +279,9 @@ def evaluate_edits(hyp_dict, ref_dict, best, sent_id, args):
 
 
 def compareEdits(hyp_edits, ref_edits):
-    tp = 0    # True Positives
-    fp = 0    # False Positives
-    fn = 0    # False Negatives
+    tp = 0  # True Positives
+    fp = 0  # False Positives
+    fn = 0  # False Negatives
     cat_dict = {}  # {cat: [tp, fp, fn], ...}
 
     for h_edit, h_cats in hyp_edits.items():
@@ -319,6 +324,7 @@ def compareEdits(hyp_edits, ref_edits):
                     cat_dict[r_cat] = [0, 0, 1]
     return tp, fp, fn, cat_dict
 
+
 # Input 1-3: True positives, false positives, false negatives
 # Input 4: Value of beta in F-score.
 # Output 1-3: Precision, Recall and F-score rounded to 4dp.
@@ -327,8 +333,9 @@ def compareEdits(hyp_edits, ref_edits):
 def computeFScore(tp, fp, fn, beta):
     p = float(tp) / (tp + fp) if fp else 1.0
     r = float(tp) / (tp + fn) if fn else 1.0
-    f = float((1 + (beta**2)) * p * r) / (((beta**2) * p) + r) if p + r else 0.0
+    f = float((1 + (beta ** 2)) * p * r) / (((beta ** 2) * p) + r) if p + r else 0.0
     return round(p, 4), round(r, 4), round(f, 4)
+
 
 # Input 1-2: Two error category dicts. Key is cat, value is list of TP, FP, FN.
 # Output: The dictionaries combined with cumulative TP, FP, FN.
@@ -341,6 +348,7 @@ def merge_dict(dict1, dict2):
         else:
             dict1[cat] = stats
     return dict1
+
 
 # Input 1: A dict; key is error cat, value is counts for [tp, fp, fn]
 # Input 2: Integer value denoting level of error category granularity.
@@ -371,6 +379,7 @@ def processCategories(cat_dict, setting):
         else:
             return cat_dict
     return proc_cat_dict
+
 
 # Input 1: A dict of global best TP, FP and FNs
 # Input 2: A dict of error types and counts for those TP, FP and FNs

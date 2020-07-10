@@ -20,7 +20,7 @@ def torch_persistent_save(*args, **kwargs):
     for i in range(3):
         try:
             return torch.save(*args, **kwargs)
-        except Exception:
+        except:
             if i == 2:
                 logging.error(traceback.format_exc())
 
@@ -297,7 +297,6 @@ def replace_unk(hypo_str, src_str, alignment, align_dict, unk):
 
 
 def post_process_prediction(hypo_tokens, src_str, alignment, align_dict, tgt_dict, remove_bpe):
-    from fairseq import tokenizer
     hypo_str = tgt_dict.string(hypo_tokens, remove_bpe)
     if align_dict is not None:
         hypo_str = replace_unk(hypo_str, src_str, alignment, align_dict, tgt_dict.unk_string())
