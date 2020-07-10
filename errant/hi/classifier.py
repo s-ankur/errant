@@ -3,7 +3,7 @@ import Levenshtein
 from nltk.stem import LancasterStemmer
 import spacy
 import spacy.symbols as POS
-from hi.hindi_stemmer import HindiStemmer
+from .hindi_stemmer import HindiStemmer
 
 # Load Hunspell word list
 
