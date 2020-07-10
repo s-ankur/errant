@@ -200,34 +200,23 @@ def get_two_sided_type(o_toks, c_toks):
         # 2. SPELLING AND INFLECTION
         # Only check alphabetical strings on the original side
         # Spelling errors take precedence over POS errors; this rule is ordered
-        print(o_toks,c_toks)
+
         if o_toks[0].text not in spell:
-            # Check a GB English dict for both orig and lower case.
-            # E.g. "cat" is in the dict, but "Cat" is not.
-            # Check if both sides have a common lemma
-            if o_toks[0].lemma == c_toks[0].lemma:
-                # Inflection; often count vs mass nouns or e.g. got vs getted
-                if o_pos == c_pos and o_pos[0] in {"NOUN", "VERB"}:
-                    return o_pos[0] + ":INFL"
-                # Unknown morphology; i.e. we cannot be more specific.
-                else:
-                    return "MORPH"
-            # Use string similarity to detect true spelling errors.
+            char_ratio = Levenshtein.ratio(o_toks[0].text, c_toks[0].text)
+            # Ratio > 0.5 means both side share at least half the same chars.
+            # WARNING: THIS IS AN APPROXIMATION.
+            if char_ratio > 0.5:
+                print(o_toks, c_toks)
+                return "SPELL"
+            # If ratio is <= 0.5, the error is more complex e.g. tolk -> say
             else:
-                char_ratio = Levenshtein.ratio(o_toks[0].text, c_toks[0].text)
-                # Ratio > 0.5 means both side share at least half the same chars.
-                # WARNING: THIS IS AN APPROXIMATION.
-                if char_ratio > 0.5:
-                    return "SPELL"
-                # If ratio is <= 0.5, the error is more complex e.g. tolk -> say
+                # If POS is the same, this takes precedence over spelling.
+                if o_pos == c_pos and \
+                        o_pos[0] not in rare_pos:
+                    return o_pos[0]
+                # Tricky cases.
                 else:
-                    # If POS is the same, this takes precedence over spelling.
-                    if o_pos == c_pos and \
-                            o_pos[0] not in rare_pos:
-                        return o_pos[0]
-                    # Tricky cases.
-                    else:
-                        return "OTHER"
+                    return "OTHER"
 
         # 3. MORPHOLOGY
         # Only ADJ, ADV, NOUN and VERB can have inflectional changes.
