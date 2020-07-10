@@ -1,6 +1,6 @@
 import argparse
 from contextlib import ExitStack
-from annotator import Annotator
+from errant import annotator.Annotator as Annotator
 
 
 def main():
