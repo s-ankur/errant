@@ -202,7 +202,7 @@ def get_two_sided_type(o_toks, c_toks):
     # 1:1 replacements (very common)
     if len(o_toks) == len(c_toks) == 1:
         # 1. SPECIAL CASES: None
-        if is_spelling(o_toks[0], c_toks[0]):
+        if is_spelling(o_toks[0].text, c_toks[0].text):
             print(o_toks, c_toks)
             return 'SPELL'
 
