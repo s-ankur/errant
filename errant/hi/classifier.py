@@ -214,15 +214,14 @@ def get_two_sided_type(o_toks, c_toks):
             # Ratio > 0.5 means both side share at least half the same chars.
             # WARNING: THIS IS AN APPROXIMATION.
             if char_ratio > 0.5:
-                print(o_toks, c_toks, "SPELL")
                 return "SPELL"
             # If ratio is <= 0.5, the error is more complex e.g. tolk -> say
             else:
-                print(o_toks, c_toks, "OTHER")
                 return "OTHER"
 
         # 3. MORPHOLOGY
         # Only ADJ, ADV, NOUN and VERB can have inflectional changes.
+        print(o_toks, c_toks, )
         if o_toks[0].lemma == c_toks[0].lemma and \
                 o_pos[0] in open_pos2 and \
                 c_pos[0] in open_pos2:
