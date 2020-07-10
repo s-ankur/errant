@@ -203,7 +203,6 @@ def get_two_sided_type(o_toks, c_toks):
     if len(o_toks) == len(c_toks) == 1:
         # 1. SPECIAL CASES: None
         if is_spelling(o_toks[0].text, c_toks[0].text):
-            print(o_toks, c_toks)
             return 'SPELL'
 
         # 2. SPELLING AND INFLECTION
@@ -215,16 +214,12 @@ def get_two_sided_type(o_toks, c_toks):
             # Ratio > 0.5 means both side share at least half the same chars.
             # WARNING: THIS IS AN APPROXIMATION.
             if char_ratio > 0.5:
+                print(o_toks, c_toks, "SPELL")
                 return "SPELL"
             # If ratio is <= 0.5, the error is more complex e.g. tolk -> say
             else:
-                # If POS is the same, this takes precedence over spelling.
-                if o_pos == c_pos and \
-                        o_pos[0] not in rare_pos:
-                    return o_pos[0]
-                # Tricky cases.
-                else:
-                    return "OTHER"
+                print(o_toks, c_toks, "SPELL")
+                return "OTHER"
 
         # 3. MORPHOLOGY
         # Only ADJ, ADV, NOUN and VERB can have inflectional changes.
@@ -235,10 +230,10 @@ def get_two_sided_type(o_toks, c_toks):
             if o_pos == c_pos:
                 # Adjective form; e.g. comparatives
                 if o_pos[0] == "ADJ":
-                    return "ADJ:FORM"
+                    return "ADJ:INFL"
                 # Noun number
                 if o_pos[0] == "NOUN":
-                    return "NOUN:NUM"
+                    return "NOUN:INFL"
                 # Verbs - various types
                 if o_pos[0] == "VERB":
                     # NOTE: These rules are carefully ordered.
