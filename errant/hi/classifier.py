@@ -193,7 +193,7 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
         # 2. MORPHOLOGY
         # Only ADJ, ADV, NOUN and VERB can have inflectional changes.
         lemma_ratio = Levenshtein.ratio(o_tok.lemma, c_tok.lemma)
-
+        print("lema",lemma_ratio,o_tok.upos,c_tok.upos  )
         if (lemma_ratio <= 0.35) and \
                 o_tok.upos in open_pos2 and \
                 c_tok.upos in open_pos2:
