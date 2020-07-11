@@ -79,6 +79,26 @@ def regularize_pos(pos: str) -> str:
 # Input: An Edit object
 # Output: The same Edit object with an updated error type
 
+pee = []
+errs = (
+    "वे उन्होने",  # R:PRON:INFL
+    "गया था",  # R:OTHER
+    "वे उन्होने",  # R:PRON:INFL
+    "महाराजा महाराज",  # R:NOUN:INFL
+    "प्रधानाचार्य प्राचार्य",  # R:NOUN:INFL
+    "वो वे",  # R:PRON:INFL
+    "को की",  # R:OTHER
+    "था रहा",  # R:OTHER
+    "हैं बने",  # R:OTHER
+    "की किया",  # R:OTHER
+    "और तथा",  # R:OTHER
+    "द्वारा मार्ग",  # R:OTHER
+    "वे उन्हें",  # R:PRON:INFL
+    "शो प्रदर्शन",  # R:OTHER
+    "हिस्से हिस्सों",  # R:NOUN:INFL
+    "दस नौ",  # R:OTHER
+)
+
 
 class Classifier:
     @staticmethod
@@ -108,7 +128,10 @@ class Classifier:
                 edit.type = op + cat
         o_join = " ".join(o_tok.text for o_tok in edit.o_toks)
         c_join = " ".join(c_tok.text for c_tok in edit.c_toks)
-        print(o_join, c_join, edit.type)
+        if (o_join + c_join) in errs:
+            print(o_join, c_join, edit.type)
+            print(pee)
+            pee = []
 
 
 # Input: Spacy tokens
@@ -172,6 +195,8 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
     if len(o_toks) == len(c_toks) == 1:
         o_tok = o_toks[0]
         c_tok = c_toks[0]
+        pee.append((o_tok, c_tok))
+
 
         # 1. SPELLING AND INFLECTION
         # Only check alphabetical strings on the original side
@@ -209,7 +234,7 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
 
                 # Verbs - various types
                 if o_tok.upos in ("VERB", "AUX"):
-                    print(o_tok.feats, c_tok.feats)
+                    # print(o_tok.feats, c_tok.feats)
                     o_feat = dict(map(lambda x: x.split('='), o_tok.feats.split('|')))
                     c_feat = dict(map(lambda x: x.split('='), o_tok.feats.split('|')))
 
