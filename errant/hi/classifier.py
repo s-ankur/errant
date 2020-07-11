@@ -100,7 +100,7 @@ class Classifier:
                 op = "R:"
                 cat = get_two_sided_type(edit.o_toks, edit.c_toks)
                 edit.type = op + cat
-        print(edit.o_toks.text,edit.c_toks,edit.)
+        print(edit.o_toks.text, edit.c_toks, edit.type)
 
 
 # Input: Spacy tokens
@@ -242,7 +242,7 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
             return "VERB:FORM"
 
         if o_tok.upos == o_tok.upos and o_tok.upos in (
-                "VERB", "ADP", "PRON","ADJ") and o_tok.dependency_relation == c_tok.dependency_relation:
+                "VERB", "ADP", "PRON", "ADJ") and o_tok.dependency_relation == c_tok.dependency_relation:
             return o_tok.upos
 
         # Tricky cases.
