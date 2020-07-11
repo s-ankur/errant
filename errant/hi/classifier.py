@@ -54,7 +54,7 @@ spell = load_word_list(base_dir / "resources" / "big.txt")
 # Part of speech map file
 pos_map = load_pos_map(base_dir / "resources" / "hi-ptb-map")
 # Open class coarse POS tags (strings)
-open_pos2 = {"ADJ", "ADV", "NOUN", "VERB", "ADP", "PRON"}
+open_pos2 = {"ADJ", "ADV", "NOUN", "VERB", "ADP", "PRON", "AUX"}
 # Rare POS tags that make uninformative error categories
 rare_pos = {"INTJ", "NUM", "SYM", "X"}
 # Special auxiliaries in contractions.
@@ -206,7 +206,7 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
 
                 # Verbs - various types
                 if o_tok.upos in ("VERB", "AUX"):
-                    print(o_feat,c_feat)
+                    print(o_feat, c_feat)
                     if o_tok.xpos == c_tok.xpos:
                         if o_feat.get('Tense') == c_feat.get('Tense') and \
                                 o_feat.get('Mood') == c_feat.get('Mood') and \
