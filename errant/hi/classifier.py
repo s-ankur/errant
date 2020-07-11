@@ -85,7 +85,14 @@ def regularize_pos(pos: str) -> str:
 class Classifier:
     @staticmethod
     def classify(edit) -> None:
-        # Nothing to nothing is a detected but not corrected edit
+        try:
+          clf(edit)
+        except:
+          print(edit.o_toks,edit.c_toks)
+          raise
+
+def clf(edit):
+     # Nothing to nothing is a detected but not corrected edit
         if not edit.o_toks and not edit.c_toks:
             edit.type = "UNK"
         # Missing
@@ -183,9 +190,6 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
         if is_spelling(o_tok.text, c_tok.text):
             return 'SPELL'
 
-        if "PROPN" in {o_tok.upos, c_tok.upos}:
-            return "PROPN"
-
         if o_tok.text not in spell:
             char_ratio = Levenshtein.ratio(o_tok.text, c_tok.text)
             # Ratio > 0.5 means both side share at least half the same chars.
@@ -195,13 +199,14 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
             # If ratio is <= 0.5, the error is more complex e.g. tolk -> say
             else:
                 return "OTHER"
+        
 
         # 2. MORPHOLOGY
         # Only ADJ, ADV, NOUN and VERB can have inflectional changes.
         lemma_ratio = Levenshtein.ratio(o_tok.lemma, c_tok.lemma)
         # print("lema", lemma_ratio, o_tok.upos, c_tok.upos)
         # print(o_tok,c_tok)
-        if (lemma_ratio >= .65) and \
+        if (lemma_ratio >= .85) and \
                 o_tok.upos in open_pos2 and \
                 c_tok.upos in open_pos2:
             # Same POS on both sides
@@ -214,8 +219,8 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
                 if o_tok.upos in ("PRON") and o_tok.lemma == c_tok.lemma:
                     o_feat = dict(map(lambda x: x.split('='), o_tok.feats.split('|')))
                     c_feat = dict(map(lambda x: x.split('='), o_tok.feats.split('|')))
-                    if o_feat['Gender'] == c_feat['Gender'] and o_feat['Number'] == c_feat['Number'] \
-                            and o_feat['Polite'] == c_feat['Polite'] and o_feat['Case'] == c_feat['Case']:
+                    if o_feat.get('Gender') == c_feat.get('Gender') and o_feat.get('Number') == c_feat.get('Number')\
+                            and o_feat.get('Polite') == c_feat.get('Polite') and o_feat.get('Case') == c_feat.get('Case'):
                         return o_tok.upos + ":INFL"
 
                 if o_tok.upos in ("ADJ", "ADP"):
@@ -236,14 +241,16 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
                         else:
                             return "VERB:FORM"
 
-            else:
-                return "MORPH"
+
 
         # Derivational morphology.
         if stemmer.stem(o_toks[0].text) == stemmer.stem(c_toks[0].text) and \
                 o_pos[0] in open_pos2 and \
                 c_pos[0] in open_pos2:
             return "MORPH"
+
+        if "PROPN" in {o_tok.upos, c_tok.upos}:
+            return "PROPN"
 
         # 3. GENERAL
         # Auxiliaries with different lemmas
