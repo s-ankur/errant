@@ -165,8 +165,8 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
         o_tok = o_toks[0]
         c_tok = c_toks[0]
 
-        o_feat = dict(map(lambda x: x.split('='), o_tok.feats.split()))
-        c_feat = dict(map(lambda x: x.split('='), o_tok.feats.split()))
+        o_feat = dict(map(lambda x: x.split('='), o_tok.feats.split('|')))
+        c_feat = dict(map(lambda x: x.split('='), o_tok.feats.split('|')))
 
         # 1. SPELLING AND INFLECTION
         # Only check alphabetical strings on the original side
