@@ -58,7 +58,7 @@ class Annotator:
     # Input: An Edit object
     # Output: The same Edit object with an updated error type
     def classify(self, edit):
-        return self.classifier.classify(edit)
+        self.classifier.classify(edit)
 
     # Input 1: An original text string parsed by spacy
     # Input 2: A corrected text string parsed by spacy
@@ -69,7 +69,7 @@ class Annotator:
         alignment = self.align(orig, cor, lev)
         edits = self.merge(alignment, merging)
         for edit in edits:
-            edit = self.classify(edit)
+            self.classify(edit)
         return edits
 
     # Input 1: An original text string parsed by spacy

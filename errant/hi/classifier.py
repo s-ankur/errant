@@ -1,17 +1,16 @@
 from pathlib import Path
 
 import Levenshtein
-import spacy.symbols as POS
 
 from .hindi_stemmer import HindiStemmer
 
 
-# Load Hunspell word list
+# Load word list
 
 
-def load_word_list(path):
+def load_word_list(path) -> set:
     with open(path) as word_list:
-        return set([word.strip() for word in word_list])
+        return {word.strip() for word in word_list}
 
 
 # Load Universal Dependency POS Tags map file.
@@ -48,23 +47,16 @@ def load_pos_map(path):
 
 # Classifier resources
 base_dir = Path(__file__).resolve().parent
-# Spacy
-nlp = None
 # Lancaster Stemmer
-# stemmer = LancasterStemmer()
 stemmer = HindiStemmer()
 # GB English word list (inc -ise and -ize)
 spell = load_word_list(base_dir / "resources" / "big.txt")
 # Part of speech map file
 pos_map = load_pos_map(base_dir / "resources" / "hi-ptb-map")
-# Open class coarse Spacy POS tags
-open_pos1 = {POS.ADJ, POS.ADV, POS.NOUN, POS.VERB}
-# Open class coarse Spacy POS tags (strings)
-open_pos2 = {"ADJ", "ADV", "NOUN", "VERB"}
+# Open class coarse POS tags (strings)
+open_pos2 = {"ADJ", "ADV", "NOUN", "VERB", "ADP"}
 # Rare POS tags that make uninformative error categories
 rare_pos = {"INTJ", "NUM", "SYM", "X"}
-# Contractions
-conts = {"'d", "'ll", "'m", "n't", "'re", "'s", "'ve"}
 # Special auxiliaries in contractions.
 aux_conts = {}
 # Some dep labels that map to pos tags.
@@ -83,7 +75,8 @@ dep_map = {
 
 
 class Classifier:
-    def classify(edit):
+    @staticmethod
+    def classify(edit) -> None:
         # Nothing to nothing is a detected but not corrected edit
         if not edit.o_toks and not edit.c_toks:
             edit.type = "UNK"
@@ -97,40 +90,23 @@ class Classifier:
             op = "U:"
             cat = get_one_sided_type(edit.o_toks)
             edit.type = op + cat
-        # Replacement and special cases
+        # Replacement
         else:
             # Same to same is a detected but not corrected edit
             if edit.o_str == edit.c_str:
                 edit.type = "UNK"
-            # Special: Ignore case change at the end of multi token edits
-            # E.g. [Doctor -> The doctor], [, since -> . Since]
-            # Classify the edit as if the last token wasn't there
-            elif edit.o_toks[-1] == edit.c_toks[-1] and \
-                    (len(edit.o_toks) > 1 or len(edit.c_toks) > 1):
-                # Store a copy of the full orig and cor toks
-                all_o_toks = edit.o_toks[:]
-                all_c_toks = edit.c_toks[:]
-                # Truncate the instance toks for classification
-                edit.o_toks = edit.o_toks[:-1]
-                edit.c_toks = edit.c_toks[:-1]
-                # Classify the truncated edit
-                edit = classify(edit)
-                # Restore the full orig and cor toks
-                edit.o_toks = all_o_toks
-                edit.c_toks = all_c_toks
-            # Replacement
+            # Replacement case
             else:
                 op = "R:"
                 cat = get_two_sided_type(edit.o_toks, edit.c_toks)
                 edit.type = op + cat
-        return edit
 
 
 # Input: Spacy tokens
 # Output: A list of pos and dep tag strings
 
 
-def get_edit_info(toks):
+def get_edit_info(toks: list) -> (list, list):
     pos = []
     dep = []
     for tok in toks:
@@ -147,16 +123,7 @@ def get_edit_info(toks):
 # When one side of the edit is null, we can only use the other side
 
 
-def get_one_sided_type(toks):
-    # Special cases
-    if len(toks) == 1:
-        # Possessive noun suffixes; e.g. ' -> 's
-        if toks[0].upos == "POS":
-            return "NOUN:POSS"
-        # Contractions. Rule must come after possessive
-        # Infinitival "to" is treated as part of a verb form
-        if toks[0].upos == POS.PART and toks[0].dependency_relation != "prep":
-            return "VERB:FORM"
+def get_one_sided_type(toks: list) -> str:
     # Extract pos tags and parse info from the toks
     pos_list, dep_list = get_edit_info(toks)
     # Auxiliary verbs
@@ -176,38 +143,31 @@ def get_one_sided_type(toks):
         return "OTHER"
 
 
-# Input 1: Spacy orig tokens
-# Input 2: Spacy cor tokens
+# Input 1: Original tokens
+# Input 2: Corrected tokens
 # Output: An error type string based on orig AND cor
-def is_spelling(o_tok: str, c_tok: str):
-    for orig_pair in (('ये', 'ए'), ('यी', 'ई'), ('या', 'आ'), ('यीं', 'ईं'), ('आ', 'वा')):
-        for pair in (orig_pair, orig_pair[::-1]):
-            if o_tok.endswith(pair[0]) and c_tok.endswith(pair[1]):
-                return o_tok.rstrip(pair[0]) == c_tok.strip(pair[1])
-    return False
 
-
-def get_two_sided_type(o_toks, c_toks):
+def get_two_sided_type(o_toks: list, c_toks: list) -> str:
     # Extract pos tags and parse info from the toks as lists
     o_pos, o_dep = get_edit_info(o_toks)
     c_pos, c_dep = get_edit_info(c_toks)
 
     # Orthography; i.e. whitespace and/or case errors.
-    if only_orth_change(o_toks, c_toks):
+    if is_only_orth_change(o_toks, c_toks):
         return "ORTH"
     # Word Order; only matches exact reordering.
-    if exact_reordering(o_toks, c_toks):
+    if is_exact_reordering(o_toks, c_toks):
         return "WO"
 
     # 1:1 replacements (very common)
     if len(o_toks) == len(c_toks) == 1:
-        # 1. SPECIAL CASES: None
-        if is_spelling(o_toks[0].text, c_toks[0].text):
-            return 'SPELL'
 
-        # 2. SPELLING AND INFLECTION
+        # 1. SPELLING AND INFLECTION
         # Only check alphabetical strings on the original side
         # Spelling errors take precedence over POS errors; this rule is ordered
+
+        if is_spelling(o_toks[0].text, c_toks[0].text):
+            return 'SPELL'
 
         if o_toks[0].text not in spell:
             char_ratio = Levenshtein.ratio(o_toks[0].text, c_toks[0].text)
@@ -219,9 +179,8 @@ def get_two_sided_type(o_toks, c_toks):
             else:
                 return "OTHER"
 
-        # 3. MORPHOLOGY
+        # 2. MORPHOLOGY
         # Only ADJ, ADV, NOUN and VERB can have inflectional changes.
-        print(o_toks, c_toks, )
         if o_toks[0].lemma == c_toks[0].lemma and \
                 o_pos[0] in open_pos2 and \
                 c_pos[0] in open_pos2:
@@ -244,8 +203,8 @@ def get_two_sided_type(o_toks, c_toks):
                             c_toks[0].xpos in {"VBG", "VBN"}:
                         return "VERB:FORM"
                     # Of what's left, TENSE errors normally involved VBD.
-                    if o_toks[0].upos == "VBD" or o_toks[0].pos == "VBD" or o_toks[0].xpos == "VBD" or c_toks[
-                        0].xpos == "VBD" or c_toks[0].upos == "VBD" or c_toks[0].pos == "VBD":
+                    if o_toks[0].upos == "VBD" or o_toks[0].pos == "VBD" or o_toks[0].xpos == "VBD" or \
+                            c_toks[0].xpos == "VBD" or c_toks[0].upos == "VBD" or c_toks[0].pos == "VBD":
                         return "VERB:TENSE"
                     # Of what's left, SVA errors normally involve VBZ.
                     if o_toks[0].xpos == "VBZ" or c_toks[0].xpos == "VBZ":
@@ -276,7 +235,7 @@ def get_two_sided_type(o_toks, c_toks):
                 c_pos[0] in open_pos2:
             return "MORPH"
 
-        # 4. GENERAL
+        # 3. GENERAL
         # Auxiliaries with different lemmas
         if o_dep[0].startswith("aux") and c_dep[0].startswith("aux"):
             return "VERB:TENSE"
@@ -343,14 +302,26 @@ def get_two_sided_type(o_toks, c_toks):
         return "OTHER"
 
 
-# Input 1: Spacy orig tokens
-# Input 2: Spacy cor tokens
+# Input 1: Original Token
+# Input 2: Corrected token
+# Output: Boolean; whether edit is a pronunciational spelling variance yi -> ii etc
+
+def is_spelling(o_tok: str, c_tok: str) -> bool:
+    for orig_pair in (('ये', 'ए'), ('यी', 'ई'), ('या', 'आ'), ('यीं', 'ईं'), ('आ', 'वा')):
+        for pair in (orig_pair, orig_pair[::-1]):
+            if o_tok.endswith(pair[0]) and c_tok.endswith(pair[1]):
+                return o_tok.rstrip(pair[0]) == c_tok.strip(pair[1])
+    return False
+
+
+# Input 1: List of Original tokens
+# Input 2: List of Corrected tokens
 # Output: Boolean; the difference between orig and cor is only whitespace or case
 
 
-def only_orth_change(o_toks, c_toks):
-    o_join = "".join([o.text for o in o_toks])
-    c_join = "".join([c.text for c in c_toks])
+def is_only_orth_change(o_toks: list, c_toks: list) -> bool:
+    o_join = "".join(o_toks)
+    c_join = "".join(c_toks)
     if o_join == c_join:
         return True
     return False
@@ -361,51 +332,8 @@ def only_orth_change(o_toks, c_toks):
 # Output: Boolean; the tokens are exactly the same but in a different order
 
 
-def exact_reordering(o_toks, c_toks):
+def is_exact_reordering(o_toks: list, c_toks: list) -> bool:
     # Sorting lets us keep duplicates.
-    o_set = sorted([o.text for o in o_toks])
-    c_set = sorted([c.text for c in c_toks])
-    if o_set == c_set:
-        return True
-    return False
-
-
-# Input 1: An original text spacy token.
-# Input 2: A corrected text spacy token.
-# Output: Boolean; both tokens have a dependant auxiliary verb.
-
-
-def preceded_by_aux(o_tok, c_tok):
-    # If the toks are aux, we need to check if they are the first aux.
-    if o_tok[0].dependency_relation.startswith("aux") and c_tok[0].dependency_relation.startswith("aux"):
-        # Find the parent verb
-        o_head = o_tok[0].head
-        c_head = c_tok[0].head
-        # Find the children of the parent
-        o_children = o_head.children
-        c_children = c_head.children
-        # Check the orig children.
-        for o_child in o_children:
-            # Look at the first aux...
-            if o_child.dep.startswith("aux"):
-                # Check if the string matches o_tok
-                if o_child.text != o_tok[0].text:
-                    # If it doesn't, o_tok is not first so check cor
-                    for c_child in c_children:
-                        # Find the first aux in cor...
-                        if c_child.dependency_relation.startswith("aux"):
-                            # If that doesn't match either, neither are first aux
-                            if c_child.text != c_tok[0].text:
-                                return True
-                            # Break after the first cor aux
-                            break
-                # Break after the first orig aux.
-                break
-    # Otherwise, the toks are main verbs so we need to look for any aux.
-    else:
-        o_deps = [o_dep.dep for o_dep in o_tok[0].children]
-        c_deps = [c_dep.dep for c_dep in c_tok[0].children]
-        if "aux" in o_deps or "aux:pass" in o_deps:
-            if "aux" in c_deps or "aux:pass" in c_deps:
-                return True
-    return False
+    o_set = sorted(o.text for o in o_toks)
+    c_set = sorted(c.text for c in c_toks)
+    return o_set == c_set
