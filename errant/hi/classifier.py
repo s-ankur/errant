@@ -121,6 +121,16 @@ def clf(edit):
         print(o_join, c_join, edit.type)
         # print(edit.o_toks, edit.c_toks)
 
+# Input: word
+# Output: Dict of Features
+
+
+def get_feat(word) -> dict:
+    try:
+        return dict(map(lambda x: x.split('='), word.feats.split('|')))
+    except (ValueError,AttributeError):
+      return {}
+
 
 # Input: Spacy tokens
 # Output: A list of pos and dep tag strings
@@ -147,8 +157,7 @@ def get_one_sided_type(toks: list) -> str:
     # Extract pos tags and parse info from the toks
     pos_list, dep_list = get_edit_info(toks)
     # Auxiliary verbs
-    if set(dep_list).issubset({"aux", "aux:pass"}):
-        return "VERB:TENSE"
+
     # POS-based tags. Ignores rare, uninformative categories
     if len(set(pos_list)) == 1 and pos_list[0] not in rare_pos:
         return pos_list[0]
@@ -167,10 +176,10 @@ def get_one_sided_type(toks: list) -> str:
 # Input 2: Corrected tokens
 # Output: An error type string based on orig AND cor
 
+
 def get_two_sided_type(o_toks: list, c_toks: list) -> str:
     # Extract pos tags and parse info from the toks as lists
-    o_pos, o_dep = get_edit_info(o_toks)
-    c_pos, c_dep = get_edit_info(c_toks)
+    
 
     # Orthography; i.e. whitespace and/or case errors.
     if is_only_orth_change(o_toks, c_toks):
@@ -183,6 +192,9 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
     if len(o_toks) == len(c_toks) == 1:
         o_tok = o_toks[0]
         c_tok = c_toks[0]
+
+        o_feat = get_feat(o_tok)
+        c_feat = get_feat(c_tok)
         # 1. SPELLING AND INFLECTION
         # Only check alphabetical strings on the original side
         # Spelling errors take precedence over POS errors; this rule is ordered
@@ -192,9 +204,10 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
 
         if o_tok.text not in spell:
             char_ratio = Levenshtein.ratio(o_tok.text, c_tok.text)
+            char_dist = Levenshtein.distance(o_tok.text, c_tok.text)
             # Ratio > 0.5 means both side share at least half the same chars.
             # WARNING: THIS IS AN APPROXIMATION.
-            if char_ratio > 0.5:
+            if char_ratio > 0.5 or char_dist==1:
                 return "SPELL"
             # If ratio is <= 0.5, the error is more complex e.g. tolk -> say
             else:
@@ -217,8 +230,7 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
                     return o_tok.upos + ":INFL"
 
                 if o_tok.upos in ("PRON") and o_tok.lemma == c_tok.lemma:
-                    o_feat = dict(map(lambda x: x.split('='), o_tok.feats.split('|')))
-                    c_feat = dict(map(lambda x: x.split('='), o_tok.feats.split('|')))
+
                     if o_feat.get('Gender') == c_feat.get('Gender') and o_feat.get('Number') == c_feat.get('Number')\
                             and o_feat.get('Polite') == c_feat.get('Polite') and o_feat.get('Case') == c_feat.get('Case'):
                         return o_tok.upos + ":INFL"
@@ -229,9 +241,6 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
                 # Verbs - various types
                 if o_tok.upos in ("VERB", "AUX"):
                     # print(o_tok.feats, c_tok.feats)
-                    o_feat = dict(map(lambda x: x.split('='), o_tok.feats.split('|')))
-                    c_feat = dict(map(lambda x: x.split('='), o_tok.feats.split('|')))
-
                     if o_tok.xpos == c_tok.xpos:
                         if o_feat.get('Tense') == c_feat.get('Tense') and \
                                 o_feat.get('Mood') == c_feat.get('Mood') and \
@@ -244,9 +253,10 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
 
 
         # Derivational morphology.
-        if stemmer.stem(o_toks[0].text) == stemmer.stem(c_toks[0].text) and \
-                o_pos[0] in open_pos2 and \
-                c_pos[0] in open_pos2:
+        print(stemmer.stem(o_tok.text),stemmer.stem(c_tok.text))
+        if stemmer.stem(o_tok.text) == stemmer.stem(c_tok.text) and \
+                o_tok.upos in open_pos2 and \
+                c_tok.upos in open_pos2:
             return "MORPH"
 
         if "PROPN" in {o_tok.upos, c_tok.upos}:
@@ -259,10 +269,16 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
 
         o_pos = regularize_pos(o_tok.upos)
         c_pos = regularize_pos(c_tok.upos)
-        if o_pos == c_pos and o_pos in ("NOUN", "VERB", "ADP", "PRON", "ADJ", "CONJ", "NUM"):
+        if o_pos == c_pos and o_pos in ("NOUN", "VERB", "ADP","ADV", "PRON", "ADJ", "CONJ", "NUM"):
             return o_pos
-
-        # Tricky cases.
+        
+        char_ratio = Levenshtein.ratio(o_tok.text, c_tok.text)
+        char_dist = Levenshtein.distance(o_tok.text, c_tok.text)
+        # Ratio > 0.5 means both side share at least half the same chars.
+        # WARNING: THIS IS AN APPROXIMATION.
+        if char_ratio > 0.5 or char_dist==1:
+            return "SPELL"
+        # Tricky cases
         else:
             return "OTHER"
 

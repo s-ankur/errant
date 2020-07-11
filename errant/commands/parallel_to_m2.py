@@ -73,7 +73,7 @@ def main():
     out_m2.close()
     error_file = open('error_file', 'w')
     for key in error_count:
-        error_file.write(key + '\t' + error_count[key])
+        error_file.write(str(key) + '\t' + str(error_count[key]))
     error_file.close()
 
 
