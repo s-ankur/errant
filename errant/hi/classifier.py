@@ -79,7 +79,7 @@ def regularize_pos(pos: str) -> str:
 # Input: An Edit object
 # Output: The same Edit object with an updated error type
 
-pee = []
+
 errs = (
     "वे उन्होने",  # R:PRON:INFL
     "गया था",  # R:OTHER
@@ -103,7 +103,6 @@ errs = (
 class Classifier:
     @staticmethod
     def classify(edit) -> None:
-        global pee
         # Nothing to nothing is a detected but not corrected edit
         if not edit.o_toks and not edit.c_toks:
             edit.type = "UNK"
@@ -129,10 +128,9 @@ class Classifier:
                 edit.type = op + cat
         o_join = " ".join(o_tok.text for o_tok in edit.o_toks)
         c_join = " ".join(c_tok.text for c_tok in edit.c_toks)
-        if (o_join +" "+ c_join) in errs:
+        if (o_join + " " + c_join) in errs:
             print(o_join, c_join, edit.type)
-            print(pee)
-            pee = []
+            print(edit.o_toks, edit.c_toks)
 
 
 # Input: Spacy tokens
@@ -196,9 +194,6 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
     if len(o_toks) == len(c_toks) == 1:
         o_tok = o_toks[0]
         c_tok = c_toks[0]
-        pee.append((o_tok, c_tok))
-
-
         # 1. SPELLING AND INFLECTION
         # Only check alphabetical strings on the original side
         # Spelling errors take precedence over POS errors; this rule is ordered
@@ -274,7 +269,7 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
 
     # Tricky cases.
     else:
-        print(o_toks,c_toks,"MULTI")
+        print(o_toks, c_toks, "MULTI")
         return "MULTI"
 
 
