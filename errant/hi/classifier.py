@@ -167,9 +167,6 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
         o_tok = o_toks[0]
         c_tok = c_toks[0]
 
-        o_feat = dict(map(lambda x: x.split('='), o_tok.feats.split('|')))
-        c_feat = dict(map(lambda x: x.split('='), o_tok.feats.split('|')))
-
         # 1. SPELLING AND INFLECTION
         # Only check alphabetical strings on the original side
         # Spelling errors take precedence over POS errors; this rule is ordered
@@ -201,12 +198,15 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
             # Same POS on both sides
             if o_tok.upos == c_tok.upos:
                 # Adjective form; e.g. comparatives
-                if o_tok.upos in ("NOUN", "ADJ", "ADP"):
+                if o_tok.upos in ("NOUN", "ADJ", "ADP","PRON"):
                     return o_tok.upos + ":INFL"
 
                 # Verbs - various types
                 if o_tok.upos in ("VERB", "AUX"):
-                    print(o_feat, c_feat)
+                    print(o_tok.feats, c_tok.feats)
+                    o_feat = dict(map(lambda x: x.split('='), o_tok.feats.split('|')))
+                    c_feat = dict(map(lambda x: x.split('='), o_tok.feats.split('|')))
+
                     if o_tok.xpos == c_tok.xpos:
                         if o_feat.get('Tense') == c_feat.get('Tense') and \
                                 o_feat.get('Mood') == c_feat.get('Mood') and \
