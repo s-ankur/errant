@@ -272,45 +272,10 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
         else:
             return "OTHER"
 
-    # Multi-token replacements (uncommon)
-    # All auxiliaries
-    if set(o_dep + c_dep).issubset({"aux", "auxpass"}):
-        return "VERB:TENSE"
-    # All same POS
-    if len(set(o_pos + c_pos)) == 1:
-        # Final verbs with the same lemma are tense; e.g. eat -> has eaten
-        if o_pos[0] == "VERB" and \
-                o_toks[-1].lemma == c_toks[-1].lemma:
-            return "VERB:TENSE"
-        # POS-based tags.
-        elif o_pos[0] not in rare_pos:
-            return o_pos[0]
-    # All same special dep labels.
-    if len(set(o_dep + c_dep)) == 1 and \
-            o_dep[0] in dep_map.keys():
-        return dep_map[o_dep[0]]
-    # Infinitives, gerunds, phrasal verbs.
-    if set(o_pos + c_pos) == {"PART", "VERB"}:
-        # Final verbs with the same lemma are form; e.g. to eat -> eating
-        if o_toks[-1].lemma == c_toks[-1].lemma:
-            return "VERB:FORM"
-        # Remaining edits are often verb; e.g. to eat -> consuming, look at -> see
-        else:
-            return "VERB"
-    # Possessive nouns; e.g. friends -> friend 's
-    if (o_pos == ["NOUN", "PART"] or c_pos == ["NOUN", "PART"]) and \
-            o_toks[0].lemma == c_toks[0].lemma:
-        return "NOUN:POSS"
-    # Adjective forms with "most" and "more"; e.g. more free -> freer
-    if (o_toks[0] in {"अधिकतम", "अधिक", "परम", "ज्यादा"} or
-        c_toks[0].text in {"अधिकतम", "अधिक", "परम", "ज्यादा"}) and \
-            o_toks[-1].lemma == c_toks[-1].lemma and \
-            len(o_toks) <= 2 and len(c_toks) <= 2:
-        return "ADJ:FORM"
-
     # Tricky cases.
     else:
-        return "OTHER"
+        print(o_toks,c_toks)
+        return "MULTI"
 
 
 # Input 1: Original Token
