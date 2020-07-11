@@ -100,7 +100,9 @@ class Classifier:
                 op = "R:"
                 cat = get_two_sided_type(edit.o_toks, edit.c_toks)
                 edit.type = op + cat
-        print(edit.o_toks.text, edit.c_toks, edit.type)
+        o_join = " ".join(o_tok.text for o_tok in edit.o_toks)
+        c_join = " ".join(c_tok.text for c_tok in edit.c_toks)
+        print(o_join, c_join, edit.type)
 
 
 # Input: Spacy tokens
