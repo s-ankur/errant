@@ -103,6 +103,7 @@ errs = (
 class Classifier:
     @staticmethod
     def classify(edit) -> None:
+        global pee
         # Nothing to nothing is a detected but not corrected edit
         if not edit.o_toks and not edit.c_toks:
             edit.type = "UNK"
@@ -128,7 +129,7 @@ class Classifier:
                 edit.type = op + cat
         o_join = " ".join(o_tok.text for o_tok in edit.o_toks)
         c_join = " ".join(c_tok.text for c_tok in edit.c_toks)
-        if (o_join + c_join) in errs:
+        if (o_join +" "+ c_join) in errs:
             print(o_join, c_join, edit.type)
             print(pee)
             pee = []
