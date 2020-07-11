@@ -70,6 +70,12 @@ dep_map = {
     "punct": "PUNCT"}
 
 
+def regularize_pos(pos: str) -> str:
+    if pos == "AUX":
+        return "VERB"
+    return pos
+
+
 # Input: An Edit object
 # Output: The same Edit object with an updated error type
 
@@ -190,7 +196,7 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
         # 2. MORPHOLOGY
         # Only ADJ, ADV, NOUN and VERB can have inflectional changes.
         lemma_ratio = Levenshtein.ratio(o_tok.lemma, c_tok.lemma)
-        #print("lema", lemma_ratio, o_tok.upos, c_tok.upos)
+        # print("lema", lemma_ratio, o_tok.upos, c_tok.upos)
         # print(o_tok,c_tok)
         if (lemma_ratio >= .65) and \
                 o_tok.upos in open_pos2 and \
@@ -198,7 +204,7 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
             # Same POS on both sides
             if o_tok.upos == c_tok.upos:
                 # Adjective form; e.g. comparatives
-                if o_tok.upos in ("NOUN", "ADJ", "ADP","PRON"):
+                if o_tok.upos in ("NOUN", "ADJ", "ADP", "PRON"):
                     return o_tok.upos + ":INFL"
 
                 # Verbs - various types
@@ -227,12 +233,14 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
 
         # 3. GENERAL
         # Auxiliaries with different lemmas
-       # if o_tok.dependency_relation.startswith("aux") and o_tok.dependency_relation.startswith("aux"):
-          #  return "VERB:FORM"
+        # if o_tok.dependency_relation.startswith("aux") and o_tok.dependency_relation.startswith("aux"):
+        #  return "VERB:FORM"
 
-        if o_tok.upos == o_tok.upos and o_tok.upos in (
-                "VERB", "ADP", "PRON", "ADJ") and o_tok.dependency_relation == c_tok.dependency_relation:
-            return o_tok.upos
+        o_pos = regularize_pos(o_tok.upos)
+        c_pos = regularize_pos(c_tok.upos)
+        if o_pos == c_pos and o_pos in ("VERB", "ADP", "PRON", "ADJ") \
+                and o_tok.dependency_relation == c_tok.dependency_relation:
+            return o_pos
 
         # Tricky cases.
         else:
