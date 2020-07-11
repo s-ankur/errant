@@ -73,6 +73,8 @@ dep_map = {
 def regularize_pos(pos: str) -> str:
     if pos == "AUX":
         return "VERB"
+    if pos in ('CCONJ', 'SCONJ'):
+        return "CONJ"
     return pos
 
 
@@ -223,10 +225,10 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
             if o_tok.upos == c_tok.upos:
                 # Adjective form; e.g. comparatives
 
-                if o_tok.upos == "NOUN" and o_tok.lemma == c_tok.lemma:
+                if o_tok.upos in ("NOUN", "PRON") and o_tok.lemma == c_tok.lemma:
                     return "NOUN:INFL"
 
-                if o_tok.upos in ("ADJ", "ADP", "PRON"):
+                if o_tok.upos in ("ADJ", "ADP"):
                     return o_tok.upos + ":INFL"
 
                 # Verbs - various types
@@ -260,7 +262,7 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
 
         o_pos = regularize_pos(o_tok.upos)
         c_pos = regularize_pos(c_tok.upos)
-        if o_pos == c_pos and o_pos in ("VERB", "ADP", "PRON", "ADJ") \
+        if o_pos == c_pos and o_pos in ("NOUN", "VERB", "ADP", "PRON", "ADJ", "CONJ", "NUM") \
                 and o_tok.dependency_relation == c_tok.dependency_relation:
             return o_pos
 
