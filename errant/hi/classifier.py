@@ -274,7 +274,7 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
 
     # Tricky cases.
     else:
-        print(o_toks,c_toks)
+        print(o_toks,c_toks,"MULTI")
         return "MULTI"
 
 
