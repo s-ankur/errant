@@ -82,21 +82,6 @@ def regularize_pos(pos: str) -> str:
 # Output: The same Edit object with an updated error type
 
 
-errs = (
-    "गया था",  # R:OTHER
-    "महाराजा महाराज",  # R:NOUN:INFL
-    "प्रधानाचार्य प्राचार्य",  # R:NOUN:INFL
-    "वो वे",  # R:PRON:INFL
-    "को की",  # R:OTHER
-    "था रहा",  # R:OTHER
-    "हैं बने",  # R:OTHER
-    "और तथा",  # R:OTHER
-    "द्वारा मार्ग",  # R:OTHER
-    "वे उन्हें",  # R:PRON:INFL
-    "शो प्रदर्शन",  # R:OTHER
-    "हिस्से हिस्सों",  # R:NOUN:INFL
-    "दस नौ",  # R:OTHER
-)
 
 
 class Classifier:
@@ -127,9 +112,9 @@ class Classifier:
                 edit.type = op + cat
         o_join = " ".join(o_tok.text for o_tok in edit.o_toks)
         c_join = " ".join(c_tok.text for c_tok in edit.c_toks)
-        if (o_join + " " + c_join) in errs:
-            print(o_join, c_join, edit.type)
-            print(edit.o_toks, edit.c_toks)
+     #   if (o_join + " " + c_join) in errs:
+        print(o_join, c_join, edit.type)
+          # print(edit.o_toks, edit.c_toks)
 
 
 # Input: Spacy tokens
@@ -226,7 +211,7 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
                 # Adjective form; e.g. comparatives
 
                 if o_tok.upos in ("NOUN", "PRON") and o_tok.lemma == c_tok.lemma:
-                    return "NOUN:INFL"
+                    return o_tok.upos + ":INFL"
 
                 if o_tok.upos in ("ADJ", "ADP"):
                     return o_tok.upos + ":INFL"
@@ -262,8 +247,7 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
 
         o_pos = regularize_pos(o_tok.upos)
         c_pos = regularize_pos(c_tok.upos)
-        if o_pos == c_pos and o_pos in ("NOUN", "VERB", "ADP", "PRON", "ADJ", "CONJ", "NUM") \
-                and o_tok.dependency_relation == c_tok.dependency_relation:
+        if o_pos == c_pos and o_pos in ("NOUN", "VERB", "ADP", "PRON", "ADJ", "CONJ", "NUM")     :
             return o_pos
 
         # Tricky cases.
