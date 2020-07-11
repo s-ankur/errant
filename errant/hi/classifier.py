@@ -190,7 +190,7 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
         # 2. MORPHOLOGY
         # Only ADJ, ADV, NOUN and VERB can have inflectional changes.
         lemma_ratio = Levenshtein.ratio(o_tok.lemma, c_tok.lemma)
-        print("lema", lemma_ratio, o_tok.upos, c_tok.upos)
+        #print("lema", lemma_ratio, o_tok.upos, c_tok.upos)
         # print(o_tok,c_tok)
         if (lemma_ratio >= .65) and \
                 o_tok.upos in open_pos2 and \
@@ -227,8 +227,8 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
 
         # 3. GENERAL
         # Auxiliaries with different lemmas
-        if o_tok.dependency_relation.startswith("aux") and o_tok.dependency_relation.startswith("aux"):
-            return "VERB:FORM"
+       # if o_tok.dependency_relation.startswith("aux") and o_tok.dependency_relation.startswith("aux"):
+          #  return "VERB:FORM"
 
         if o_tok.upos == o_tok.upos and o_tok.upos in (
                 "VERB", "ADP", "PRON", "ADJ") and o_tok.dependency_relation == c_tok.dependency_relation:
