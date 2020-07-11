@@ -194,7 +194,7 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
         # Only ADJ, ADV, NOUN and VERB can have inflectional changes.
         lemma_ratio = Levenshtein.ratio(o_tok.lemma, c_tok.lemma)
         print("lema", lemma_ratio, o_tok.upos, c_tok.upos)
-        #print(o_tok,c_tok)
+        # print(o_tok,c_tok)
         if (lemma_ratio >= .65) and \
                 o_tok.upos in open_pos2 and \
                 c_tok.upos in open_pos2:
@@ -205,7 +205,7 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
                     return o_tok.upos + ":INFL"
 
                 # Verbs - various types
-                if o_tok.upos == "VERB":
+                if o_tok.upos in ("VERB", "AUX"):
 
                     if o_tok.xpos == c_tok.xpos:
                         if o_feat.get('Tense') == c_feat.get('Tense') and \
@@ -216,20 +216,6 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
                         else:
                             return "VERB:FORM"
 
-            # Use dep labels to find some more ADJ:FORM
-            if set(o_dep + c_dep).issubset({"acomp", "amod"}):
-                return "ADJ:FORM"
-            # Adj to plural noun is usually noun number; e.g. musical -> musicals.
-            if o_pos[0] == "ADJ" and c_toks[0].xpos == "NNS":
-                return "NOUN:NUM"
-            # For remaining verb errors (rare), rely on c_pos
-            if c_toks[0].xpos in {"VBG", "VBN"} or c_toks[0].upos in {"VBG", "VBN"} or c_toks[0].pos in {"VBG", "VBN"}:
-                return "VERB:FORM"
-            if c_toks[0].upos == "VBD" or c_toks[0].xpos == "VBD" or c_toks[0].pos == "VBD":
-                return "VERB:TENSE"
-            if c_toks[0].upos == "VBZ" or c_toks[0].xpos == "VBZ" or c_toks[0].pos == "VBZ":
-                return "VERB:SVA"
-            # Tricky cases that all have the same lemma.
             else:
                 return "MORPH"
 
