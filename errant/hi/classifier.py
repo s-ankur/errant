@@ -206,7 +206,7 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
 
                 # Verbs - various types
                 if o_tok.upos in ("VERB", "AUX"):
-
+                    print(o_feat,c_feat)
                     if o_tok.xpos == c_tok.xpos:
                         if o_feat.get('Tense') == c_feat.get('Tense') and \
                                 o_feat.get('Mood') == c_feat.get('Mood') and \
