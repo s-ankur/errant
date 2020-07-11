@@ -54,7 +54,7 @@ spell = load_word_list(base_dir / "resources" / "big.txt")
 # Part of speech map file
 pos_map = load_pos_map(base_dir / "resources" / "hi-ptb-map")
 # Open class coarse POS tags (strings)
-open_pos2 = {"ADJ", "ADV", "NOUN", "VERB", "ADP"}
+open_pos2 = {"ADJ", "ADV", "NOUN", "VERB", "ADP", "PRON"}
 # Rare POS tags that make uninformative error categories
 rare_pos = {"INTJ", "NUM", "SYM", "X"}
 # Special auxiliaries in contractions.
@@ -100,6 +100,7 @@ class Classifier:
                 op = "R:"
                 cat = get_two_sided_type(edit.o_toks, edit.c_toks)
                 edit.type = op + cat
+        print(edit.o_toks.text,edit.c_toks,edit.)
 
 
 # Input: Spacy tokens
@@ -161,16 +162,24 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
 
     # 1:1 replacements (very common)
     if len(o_toks) == len(c_toks) == 1:
+        o_tok = o_toks[0]
+        c_tok = c_toks[0]
+
+        o_feat = dict(map(lambda x: x.split('='), o_tok.feats.split()))
+        c_feat = dict(map(lambda x: x.split('='), o_tok.feats.split()))
 
         # 1. SPELLING AND INFLECTION
         # Only check alphabetical strings on the original side
         # Spelling errors take precedence over POS errors; this rule is ordered
 
-        if is_spelling(o_toks[0].text, c_toks[0].text):
+        if is_spelling(o_tok.text, c_tok.text):
             return 'SPELL'
 
-        if o_toks[0].text not in spell:
-            char_ratio = Levenshtein.ratio(o_toks[0].text, c_toks[0].text)
+        if "PROPN" in {o_tok.upos, c_tok.upos}:
+            return "PROPN"
+
+        if o_tok.text not in spell:
+            char_ratio = Levenshtein.ratio(o_tok.text, c_tok.text)
             # Ratio > 0.5 means both side share at least half the same chars.
             # WARNING: THIS IS AN APPROXIMATION.
             if char_ratio > 0.5:
@@ -181,38 +190,29 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
 
         # 2. MORPHOLOGY
         # Only ADJ, ADV, NOUN and VERB can have inflectional changes.
-        if o_toks[0].lemma == c_toks[0].lemma and \
-                o_pos[0] in open_pos2 and \
-                c_pos[0] in open_pos2:
+        lemma_ratio = Levenshtein.ratio(o_tok.lemma, c_tok.lemma)
+
+        if (lemma_ratio <= 0.35) and \
+                o_tok.upos in open_pos2 and \
+                c_tok.upos in open_pos2:
             # Same POS on both sides
-            if o_pos == c_pos:
+            if o_tok.upos == c_tok.upos:
                 # Adjective form; e.g. comparatives
-                if o_pos[0] == "ADJ":
-                    return "ADJ:INFL"
-                # Noun number
-                if o_pos[0] == "NOUN":
-                    return "NOUN:INFL"
+                if o_tok.upos in ("NOUN", "ADJ", "ADP"):
+                    return o_tok.upos + ":INFL"
+
                 # Verbs - various types
-                if o_pos[0] == "VERB":
-                    # NOTE: These rules are carefully ordered.
-                    # Use the dep parse to find some form errors.
-                    # Main verbs preceded by aux cannot be tense or SVA.
-                    # Use fine PTB tags to find various errors.
-                    # FORM errors normally involve VBG or VBN.
-                    if o_toks[0].xpos in {"VBG", "VBN"} or \
-                            c_toks[0].xpos in {"VBG", "VBN"}:
-                        return "VERB:FORM"
-                    # Of what's left, TENSE errors normally involved VBD.
-                    if o_toks[0].upos == "VBD" or o_toks[0].pos == "VBD" or o_toks[0].xpos == "VBD" or \
-                            c_toks[0].xpos == "VBD" or c_toks[0].upos == "VBD" or c_toks[0].pos == "VBD":
-                        return "VERB:TENSE"
-                    # Of what's left, SVA errors normally involve VBZ.
-                    if o_toks[0].xpos == "VBZ" or c_toks[0].xpos == "VBZ":
-                        return "VERB:SVA"
-                    # Any remaining aux verbs are called TENSE.
-                    if o_dep[0].startswith("aux") and \
-                            c_dep[0].startswith("aux"):
-                        return "VERB:TENSE"
+                if o_tok.upos == "VERB":
+
+                    if o_tok.xpos == c_tok.xpos:
+                        if o_feat.get('Tense') == c_feat.get('Tense') and \
+                                o_feat.get('Mood') == c_feat.get('Mood') and \
+                                o_feat.get('VerbForm') == c_feat.get('VerbForm') and \
+                                o_feat.get('Aspect') == c_feat.get('Aspect'):
+                            return "VERB:INFL"
+                        else:
+                            return "VERB:FORM"
+
             # Use dep labels to find some more ADJ:FORM
             if set(o_dep + c_dep).issubset({"acomp", "amod"}):
                 return "ADJ:FORM"
@@ -229,6 +229,7 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
             # Tricky cases that all have the same lemma.
             else:
                 return "MORPH"
+
         # Derivational morphology.
         if stemmer.stem(o_toks[0].text) == stemmer.stem(c_toks[0].text) and \
                 o_pos[0] in open_pos2 and \
@@ -237,26 +238,13 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
 
         # 3. GENERAL
         # Auxiliaries with different lemmas
-        if o_dep[0].startswith("aux") and c_dep[0].startswith("aux"):
-            return "VERB:TENSE"
-        # POS-based tags. Some of these are context sensitive mispellings.
-        if o_pos == c_pos and o_pos[0] not in rare_pos:
-            return o_pos[0]
-        # Some dep labels map to POS-based tags.
-        if o_dep == c_dep and o_dep[0] in dep_map.keys():
-            return dep_map[o_dep[0]]
-        # Phrasal verb particles.
-        if set(o_pos + c_pos) == {"PART", "PREP"} or \
-                set(o_dep + c_dep) == {"prt", "prep"}:
-            return "PART"
-        # Can use dep labels to resolve DET + PRON combinations.
-        if set(o_pos + c_pos) == {"DET", "PRON"}:
-            # DET cannot be a subject or object.
-            if c_dep[0] in {"nsubj", "nsubjpass", "dobj", "pobj"}:
-                return "PRON"
-            # "poss" indicates possessive determiner
-            if c_dep[0] == "poss":
-                return "DET"
+        if o_tok.dependency_relation.startswith("aux") and o_tok.dependency_relation.startswith("aux"):
+            return "VERB:FORM"
+
+        if o_tok.upos == o_tok.upos and o_tok.upos in (
+                "VERB", "ADP", "PRON","ADJ") and o_tok.dependency_relation == c_tok.dependency_relation:
+            return o_tok.upos
+
         # Tricky cases.
         else:
             return "OTHER"
