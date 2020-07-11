@@ -82,8 +82,6 @@ def regularize_pos(pos: str) -> str:
 # Output: The same Edit object with an updated error type
 
 
-
-
 class Classifier:
     @staticmethod
     def classify(edit) -> None:
@@ -112,9 +110,9 @@ class Classifier:
                 edit.type = op + cat
         o_join = " ".join(o_tok.text for o_tok in edit.o_toks)
         c_join = " ".join(c_tok.text for c_tok in edit.c_toks)
-     #   if (o_join + " " + c_join) in errs:
+        #   if (o_join + " " + c_join) in errs:
         print(o_join, c_join, edit.type)
-          # print(edit.o_toks, edit.c_toks)
+        # print(edit.o_toks, edit.c_toks)
 
 
 # Input: Spacy tokens
@@ -210,8 +208,15 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
             if o_tok.upos == c_tok.upos:
                 # Adjective form; e.g. comparatives
 
-                if o_tok.upos in ("NOUN", "PRON") and o_tok.lemma == c_tok.lemma:
+                if o_tok.upos in ("NOUN") and o_tok.lemma == c_tok.lemma:
                     return o_tok.upos + ":INFL"
+
+                if o_tok.upos in ("PRON") and o_tok.lemma == c_tok.lemma:
+                    o_feat = dict(map(lambda x: x.split('='), o_tok.feats.split('|')))
+                    c_feat = dict(map(lambda x: x.split('='), o_tok.feats.split('|')))
+                    if o_feat['Gender'] == c_feat['Gender'] and o_feat['Number'] == c_feat['Number'] \
+                            and o_feat['Polite'] == c_feat['Polite'] and o_feat['Case'] == c_feat['Case']:
+                        return o_tok.upos + ":INFL"
 
                 if o_tok.upos in ("ADJ", "ADP"):
                     return o_tok.upos + ":INFL"
@@ -247,7 +252,7 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
 
         o_pos = regularize_pos(o_tok.upos)
         c_pos = regularize_pos(c_tok.upos)
-        if o_pos == c_pos and o_pos in ("NOUN", "VERB", "ADP", "PRON", "ADJ", "CONJ", "NUM")     :
+        if o_pos == c_pos and o_pos in ("NOUN", "VERB", "ADP", "PRON", "ADJ", "CONJ", "NUM"):
             return o_pos
 
         # Tricky cases.
