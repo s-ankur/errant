@@ -81,16 +81,13 @@ def regularize_pos(pos: str) -> str:
 
 
 errs = (
-    "वे उन्होने",  # R:PRON:INFL
     "गया था",  # R:OTHER
-    "वे उन्होने",  # R:PRON:INFL
     "महाराजा महाराज",  # R:NOUN:INFL
     "प्रधानाचार्य प्राचार्य",  # R:NOUN:INFL
     "वो वे",  # R:PRON:INFL
     "को की",  # R:OTHER
     "था रहा",  # R:OTHER
     "हैं बने",  # R:OTHER
-    "की किया",  # R:OTHER
     "और तथा",  # R:OTHER
     "द्वारा मार्ग",  # R:OTHER
     "वे उन्हें",  # R:PRON:INFL
@@ -225,7 +222,11 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
             # Same POS on both sides
             if o_tok.upos == c_tok.upos:
                 # Adjective form; e.g. comparatives
-                if o_tok.upos in ("NOUN", "ADJ", "ADP", "PRON"):
+
+                if o_tok.upos == "NOUN" and o_tok.lemma == c_tok.lemma:
+                    return "NOUN:INFL"
+
+                if o_tok.upos in ("ADJ", "ADP", "PRON"):
                     return o_tok.upos + ":INFL"
 
                 # Verbs - various types
