@@ -308,8 +308,8 @@ def is_spelling(o_tok: str, c_tok: str) -> bool:
 
 
 def is_only_orth_change(o_toks: list, c_toks: list) -> bool:
-    o_join = "".join(o_toks)
-    c_join = "".join(c_toks)
+    o_join = "".join(o_tok.text for o_tok in o_toks)
+    c_join = "".join(c_tok.text for c_tok in c_toks)
     if o_join == c_join:
         return True
     return False
