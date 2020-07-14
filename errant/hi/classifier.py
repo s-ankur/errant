@@ -230,9 +230,9 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
                     return o_tok.upos + ":INFL"
 
                 if o_tok.upos in ("PRON") and o_tok.lemma == c_tok.lemma:
-
-                    if o_feat.get('Gender') == c_feat.get('Gender') and o_feat.get('Number') == c_feat.get('Number')\
-                            and o_feat.get('Polite') == c_feat.get('Polite') and o_feat.get('Case') == c_feat.get('Case'):
+                    print(o_feat,c_feat)
+                    if o_feat.get('Number') == c_feat.get('Number')\
+                            and o_feat.get('Polite') == c_feat.get('Polite'):
                         return o_tok.upos + ":INFL"
 
                 if o_tok.upos in ("ADJ", "ADP"):
@@ -253,7 +253,7 @@ def get_two_sided_type(o_toks: list, c_toks: list) -> str:
 
 
         # Derivational morphology.
-        print(stemmer.stem(o_tok.text),stemmer.stem(c_tok.text))
+      #  print(stemmer.stem(o_tok.text),stemmer.stem(c_tok.text))
         if stemmer.stem(o_tok.text) == stemmer.stem(c_tok.text) and \
                 o_tok.upos in open_pos2 and \
                 c_tok.upos in open_pos2:

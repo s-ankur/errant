@@ -1,5 +1,5 @@
 class HindiStemmer:
-    def generate_stem_words(self, word):
+    def stem(self, word):
         suffixes = {
             1: ["ो", "े", "ू", "ु", "ी", "ि", "ा"],
             2: ["कर", "ाओ", "िए", "ाई", "ाए", "ने", "नी", "ना", "ते", "ीं", "ती", "ता", "ाँ", "ां", "ों",
