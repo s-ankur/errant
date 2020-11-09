@@ -9,13 +9,23 @@ class Edit:
         # Orig offsets, spacy tokens and string
         self.o_start = edit[0]
         self.o_end = edit[1]
-        self.o_toks = orig[self.o_start:self.o_end]
-        self.o_str = self.o_toks.text if self.o_toks else ""
+        temp1 = []
+        temp2 = []
+        self.o_text=" ".join([words.text for words in orig.sentences[0].words]) 
+        self.c_text=" ".join([words.text for words in cor.sentences[0].words])  
+        for sent in orig.sentences:
+            for word in sent.words:
+                temp1.append(word)
+        for sent in cor.sentences:
+            for word in sent.words:
+                temp2.append(word)
+        self.o_toks = temp1[self.o_start:self.o_end]
+        self.o_str = " ".join([words.text for words in self.o_toks]) if self.o_toks else ""
         # Cor offsets, spacy tokens and string
         self.c_start = edit[2]
         self.c_end = edit[3]
-        self.c_toks = cor[self.c_start:self.c_end]
-        self.c_str = self.c_toks.text if self.c_toks else ""
+        self.c_toks = temp2[self.c_start:self.c_end]
+        self.c_str = " ".join([words.text for words in self.c_toks]) if self.c_toks else ""
         # Error type
         self.type = type
 
@@ -37,12 +47,17 @@ class Edit:
             self.o_end -= 1
             self.c_end -= 1
         # Update the strings
-        self.o_str = self.o_toks.text if self.o_toks else ""
-        self.c_str = self.c_toks.text if self.c_toks else ""
+        self.o_str = " ".join([words.text for words in self.o_toks]) if self.o_toks else ""
+        self.c_str = " ".join([words.text for words in self.c_toks]) if self.c_toks else ""
         return self
 
     # Input: An id for the annotator
     # Output: An edit string formatted for an M2 file
+    def to_srctrg(self):
+        src =self.o_text
+        trg =self.c_text
+        return src,trg
+
     def to_m2(self, id=0):
         span = " ".join(["A", str(self.o_start), str(self.o_end)])
         cor_toks_str = " ".join([tok.text for tok in self.c_toks])
@@ -50,7 +65,7 @@ class Edit:
 
     # Edit object string representation
     def __str__(self):
-        orig = "Orig: "+str([self.o_start, self.o_end, self.o_str])
-        cor = "Cor: "+str([self.c_start, self.c_end, self.c_str])
-        type = "Type: "+repr(self.type)
+        orig = "Orig: " + str([self.o_start, self.o_end, self.o_str])
+        cor = "Cor: " + str([self.c_start, self.c_end, self.c_str])
+        type = "Type: " + repr(self.type)
         return ", ".join([orig, cor, type])

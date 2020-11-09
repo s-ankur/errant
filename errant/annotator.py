@@ -1,36 +1,35 @@
-from errant.alignment import Alignment
-from errant.edit import Edit
-from spacy.tokens import Doc
-
 # Main ERRANT Annotator class
-class Annotator:
+import stanfordnlp
 
+from .alignment import Alignment
+from .edit import Edit
+from .hi.classifier import Classifier
+from .hi.merger import Merger
+
+
+class Annotator:
     # Input 1: A string language id: e.g. "en"
     # Input 2: A spacy processing object for the language
     # Input 3: A merging module for the language
     # Input 4: A classifier module for the language
-    def __init__(self, lang, nlp=None, merger=None, classifier=None):
+    def __init__(self, lang='hi', nlp=None, merger=None, classifier=None):
         self.lang = lang
-        self.nlp = nlp
-        self.merger = merger
-        self.classifier = classifier
+        self.nlp = stanfordnlp.Pipeline(lang='hi')
+        self.merger = Merger()
+        self.classifier = Classifier
 
     # Input 1: A text string
     # Input 2: A flag for word tokenisation
     # Output: The input string parsed by spacy
     def parse(self, text, tokenise=False):
-        if tokenise:
-            text = self.nlp(text)
-        else:
-            text = Doc(self.nlp.vocab, text.split())
-            self.nlp.tagger(text)
-            self.nlp.parser(text)
-        return text
+        hindi_doc = self.nlp(text)
+        return hindi_doc
 
     # Input 1: An original text string parsed by spacy
     # Input 2: A corrected text string parsed by spacy
     # Input 3: A flag for standard Levenshtein alignment
     # Output: An Alignment object
+
     def align(self, orig, cor, lev=False):
         return Alignment(orig, cor, lev)
 
@@ -53,13 +52,13 @@ class Annotator:
         # Unknown
         else:
             raise Exception("Unknown merging strategy. Choose from: "
-                "rules, all-split, all-merge, all-equal.")
+                            "rules, all-split, all-merge, all-equal.")
         return edits
 
     # Input: An Edit object
     # Output: The same Edit object with an updated error type
     def classify(self, edit):
-        return self.classifier.classify(edit)
+        self.classifier.classify(edit)
 
     # Input 1: An original text string parsed by spacy
     # Input 2: A corrected text string parsed by spacy
@@ -70,7 +69,7 @@ class Annotator:
         alignment = self.align(orig, cor, lev)
         edits = self.merge(alignment, merging)
         for edit in edits:
-            edit = self.classify(edit)
+            self.classify(edit)
         return edits
 
     # Input 1: An original text string parsed by spacy
@@ -89,11 +88,11 @@ class Annotator:
         # Unknown edit format
         else:
             raise Exception("Edit not of the form: "
-                "[o_start, o_end, c_start, c_end, (cat)]")
+                            "[o_start, o_end, c_start, c_end, (cat)]")
         # Minimise edit
-        if min: 
+        if min:
             edit = edit.minimise()
         # Classify edit
-        if not old_cat: 
+        if not old_cat:
             edit = self.classify(edit)
         return edit
